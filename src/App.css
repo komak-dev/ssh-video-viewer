@@ -148,12 +148,62 @@ button {
   color: var(--danger);
 }
 
+.btn-icon.small {
+  width: 28px;
+  height: 28px;
+  font-size: 1rem;
+}
+
+.btn-glass.small {
+  padding: 6px 12px;
+  font-size: 0.9rem;
+}
+
 /* --- Components: Inputs --- */
 
 .input-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.file-input-wrapper {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.file-input-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.status-badge {
+  font-size: 0.9rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  flex: 1;
+}
+
+.status-badge.neutral {
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+.status-badge.success {
+  color: #4ade80;
+  /* Green 400 */
+  background: rgba(74, 222, 128, 0.1);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 label {
@@ -223,13 +273,73 @@ textarea {
   border-radius: var(--radius-lg);
   overflow: hidden;
   width: 100%;
-  max-width: 1000px;
-  display: grid;
-  grid-template-columns: 280px 1fr;
+  width: 100%;
+  max-width: 1200px;
+  /* Increased max-width */
   animation: fadeUp 0.6s var(--ease-out);
   margin: auto;
   /* Uses flexbox centering but allows scroll if overflow */
 }
+
+/* List Mode Styles */
+.glass-panel.list-mode {
+  display: flex;
+  flex-direction: column;
+  max-width: 900px;
+  padding: 0;
+}
+
+.list-header {
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.list-header h1 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.list-grid-wrapper {
+  padding: 32px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  overflow-y: auto;
+  max-height: 80vh;
+}
+
+/* Form Mode Styles */
+.glass-panel.form-mode {
+  display: flex;
+  flex-direction: column;
+  max-width: 600px;
+  /* Narrower for focus */
+  padding: 32px;
+}
+
+.config-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.back-btn {
+  width: 40px;
+  height: 40px;
+  font-size: 1.2rem;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.config-scroll-area {
+  overflow-y: auto;
+  padding-right: 4px;
+  /* Space for scrollbar */
+}
+
 
 /* Sidebar in Connect Screen */
 .profiles-sidebar {
@@ -249,53 +359,139 @@ textarea {
   color: var(--text-primary);
 }
 
+/* New Profile Card styling */
+.new-profile-card {
+  border: 1px dashed var(--glass-border);
+  background: rgba(255, 255, 255, 0.02);
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.new-profile-card:hover {
+  border-color: var(--accent-color);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.new-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--glass-border);
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  transition: 0.2s;
+}
+
+.new-profile-card:hover .new-icon {
+  background: var(--accent-color);
+  color: #fff;
+}
+
+
 .profiles-list {
   flex: 1;
   overflow-y: auto;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  padding: 16px;
+  /* Increased padding */
+  display: grid;
+  /* Grid layout */
+  grid-template-columns: repeat(2, 1fr);
+  /* 2 columns */
+  grid-auto-rows: max-content;
+  /* Infinite vertical */
+  gap: 12px;
+  /* Increased gap */
+}
+
+/* Scrollbar for profiles */
+.profiles-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.profiles-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
 }
 
 .profile-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid transparent;
   padding: 16px;
-  border-radius: var(--radius-md);
+  /* More breathing room */
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  /* Stack info and delete button vertical or just accommodate grid */
+  justify-content: space-between;
+  align-items: flex-start;
+  /* Align left */
+  gap: 8px;
+  min-height: 100px;
+  /* Ensure some height for grid look */
+}
+
+/* Profile Card Internal Layout */
+.card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  position: relative;
-  overflow: hidden;
+  align-items: flex-start;
+  width: 100%;
 }
 
 .profile-card:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
-.profile-card.active {
+.profile-card .btn-icon.danger {
+  opacity: 0;
+  /* Hide delete by default */
+  transition: opacity 0.2s;
+}
+
+.profile-card:hover .btn-icon.danger {
+  opacity: 1;
+  /* Show on hover */
+}
+
+.card-actions {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.btn-glass.small.full-width {
+  width: 100%;
+  text-align: center;
+  justify-content: center;
   background: rgba(99, 102, 241, 0.1);
+  color: var(--accent-color);
+  border-color: rgba(99, 102, 241, 0.2);
 }
 
-.profile-card.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
+.btn-glass.small.full-width:hover {
   background: var(--accent-color);
+  color: white;
 }
+
+/* .profile-card.active was removed as selection is now view-based */
 
 .profile-info h3 {
-  font-size: 0.95rem;
+  font-size: 1rem;
+  font-weight: 600;
   margin-bottom: 4px;
+  color: var(--text-primary);
 }
 
 .profile-info p {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+  /* Softer text for details */
   margin: 0;
 }
 
@@ -346,17 +542,31 @@ textarea {
 /* --- Layout: Player Screen --- */
 
 .screen-player {
-  display: flex;
   height: 100vh;
+  /* Fix height to viewport */
+  overflow: hidden;
+  /* Prevent body scroll */
+  display: flex;
   background: #000;
+}
+
+.sidebar-wrapper {
+  height: 100%;
+  /* Full height */
+  position: relative;
+  z-index: 10;
 }
 
 .video-sidebar {
   /* Width handled inline by React for resizing */
+  height: 100%;
+  /* Full height */
   background: rgba(10, 10, 15, 0.9);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  /* Ensure inner list scrolls, not this container */
   transition: transform 0.3s var(--ease-out);
   /* Only animate transform (hide), not width */
   z-index: 10;
@@ -757,7 +967,8 @@ video {
     max-width: calc(100% - 70px);
     /* Leave room for hamburger (20px left + 40px width + gap) */
     right: 10px;
-    top: 10px;
+    top: 20px;
+    /* Align with hamburger button (which is top: 20px) */
   }
 
 
@@ -788,6 +999,8 @@ video {
     height: 100%;
     border-right: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+    padding-top: 60px;
+    /* Space for hamburger button */
   }
 
   /* Hide resizer on mobile */

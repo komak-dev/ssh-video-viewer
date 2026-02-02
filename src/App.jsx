@@ -70,17 +70,16 @@ function App() {
     }
   }, []);
 
-  const preparedConfig = useMemo(
-    () => ({
-      host: config.host.trim(),
-      port: Number(config.port) || 22,
-      username: config.username.trim(),
-      password: config.password.trim() || null,
-      privateKey: config.privateKey.trim() || null,
-      passphrase: config.passphrase.trim() || null,
-    }),
-    [config],
-  );
+  const getSshConfig = (sourceConfig) => ({
+    host: sourceConfig.host.trim(),
+    port: Number(sourceConfig.port) || 22,
+    username: sourceConfig.username.trim(),
+    password: sourceConfig.password?.trim() || null,
+    privateKey: sourceConfig.privateKey?.trim() || null,
+    passphrase: sourceConfig.passphrase?.trim() || null,
+  });
+
+  const preparedConfig = useMemo(() => getSshConfig(config), [config]);
 
   const persistProfiles = (nextProfiles, nextActiveId = activeProfileId) => {
     setProfiles(nextProfiles);
@@ -94,17 +93,24 @@ function App() {
       setStatus("Please enter a connection name.");
       return;
     }
-    const id = activeProfileId || crypto.randomUUID();
-    const next = profiles.filter((profile) => profile.id !== id);
+    // Always create a new ID (Save as New)
+    const id = crypto.randomUUID();
+    const next = [...profiles];
     next.unshift({ ...config, id, name });
     persistProfiles(next, id);
-    setStatus("Profile saved.");
+    setStatus("Profile saved as new connection.");
   };
 
   const handleSelectProfile = (profile) => {
     setActiveProfileId(profile.id);
     setConfig({ ...defaultConfig, ...profile });
     setStatus(`Selected: ${profile.name}`);
+  };
+
+  const handleNewProfile = () => {
+    setActiveProfileId(null);
+    setConfig(defaultConfig);
+    setStatus("New profile created.");
   };
 
   const handleDeleteProfile = (profileId) => {
@@ -119,14 +125,28 @@ function App() {
     }
   };
 
-  const loadVideos = async () => {
+  const loadVideos = async (overrideProfile = null) => {
+    // Check if overrideProfile is a click event (synthetic event) or null
+    const isProfile = overrideProfile && overrideProfile.host;
+
     setBusy(true);
     setStatus("Fetching video list...");
+
     try {
-      await invoke("set_active_config", { config: preparedConfig });
+      // Use override config if provided, otherwise use current state
+      let activeConfig = preparedConfig;
+
+      if (isProfile) {
+        // If connecting via double-click (override), update state to match
+        setActiveProfileId(overrideProfile.id);
+        setConfig({ ...defaultConfig, ...overrideProfile });
+        activeConfig = getSshConfig(overrideProfile);
+      }
+
+      await invoke("set_active_config", { config: activeConfig });
       const result = await invoke("list_videos", {
-        config: preparedConfig,
-        folder: config.folder.trim(),
+        config: activeConfig,
+        folder: (isProfile ? overrideProfile.folder : config.folder).trim(),
       });
       setFiles(result);
       setCurrentPath("");
@@ -181,37 +201,44 @@ function App() {
 
   if (screen === "connect") {
     return (
-      <ConnectScreen
-        config={config}
-        setConfig={setConfig}
-        profiles={profiles}
-        activeProfileId={activeProfileId}
-        onSelectProfile={handleSelectProfile}
-        onDeleteProfile={handleDeleteProfile}
-        onSaveProfile={handleSaveProfile}
-        onConnect={loadVideos}
-        busy={busy}
-        status={status}
-      />
+      <>
+        <ConnectScreen
+          config={config}
+          setConfig={setConfig}
+          profiles={profiles}
+          activeProfileId={activeProfileId}
+          onSelectProfile={handleSelectProfile}
+          onNewProfile={handleNewProfile}
+          onDeleteProfile={handleDeleteProfile}
+          onSaveProfile={handleSaveProfile}
+          onConnect={loadVideos}
+          busy={busy}
+          status={status}
+        />
+      </>
     );
   }
 
   return (
-    <PlayerScreen
-      files={files}
-      currentPath={currentPath}
-      currentSrc={currentSrc}
-      status={status}
-      busy={busy}
-      config={config}
-      autoPlayNext={autoPlayNext}
-      setAutoPlayNext={setAutoPlayNext}
-      onPlayFile={playFile}
-      onPlayNext={playNext}
-      onPlayPrevious={playPrevious}
-      onRefreshList={loadVideos}
-      onBack={() => setScreen("connect")}
-    />
+    <>
+      {/* Re-enable pointer events for buttons inside the drag region if any (traffic lights handle themselves) */}
+
+      <PlayerScreen
+        files={files}
+        currentPath={currentPath}
+        currentSrc={currentSrc}
+        status={status}
+        busy={busy}
+        config={config}
+        autoPlayNext={autoPlayNext}
+        setAutoPlayNext={setAutoPlayNext}
+        onPlayFile={playFile}
+        onPlayNext={playNext}
+        onPlayPrevious={playPrevious}
+        onRefreshList={loadVideos}
+        onBack={() => setScreen("connect")}
+      />
+    </>
   );
 }
 

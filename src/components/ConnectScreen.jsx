@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 function ConnectScreen({
     config,
@@ -6,35 +6,66 @@ function ConnectScreen({
     profiles,
     activeProfileId,
     onSelectProfile,
+    onNewProfile,
     onDeleteProfile,
     onSaveProfile,
     onConnect,
     busy,
     status,
 }) {
-    return (
-        <div className="screen-connect">
-            <div className="glass-panel">
-                {/* Left Sidebar: Profiles */}
-                <aside className="profiles-sidebar">
-                    <div className="profiles-header">
-                        <h2>Profiles</h2>
-                    </div>
-                    <div className="profiles-list">
-                        {profiles.length === 0 ? (
-                            <div style={{ padding: "0 20px", color: "var(--text-tertiary)" }}>
-                                No saved profiles.
-                            </div>
-                        ) : (
-                            profiles.map((profile) => (
-                                <div
-                                    key={profile.id}
-                                    className={`profile-card ${profile.id === activeProfileId ? "active" : ""
-                                        }`}
-                                    onClick={() => onSelectProfile(profile)}
-                                    role="button"
-                                    tabIndex={0}
-                                >
+    const [view, setView] = useState("list"); // "list" or "form"
+
+    const handleProfileClick = (profile) => {
+        onSelectProfile(profile);
+        setView("form");
+    };
+
+    const handleNewClick = () => {
+        onNewProfile();
+        setView("form");
+    };
+
+    const handleBack = () => {
+        setView("list");
+    };
+
+    const handleSaveAndBack = () => {
+        onSaveProfile();
+        setView("list");
+    };
+
+    // List View Render
+    if (view === "list") {
+        return (
+            <div className="screen-connect">
+                <div className="glass-panel list-mode">
+                    <header className="list-header">
+                        <h1>Select Profile</h1>
+                        <p>{profiles.length} profiles stored</p>
+                    </header>
+
+                    <div className="list-grid-wrapper">
+                        {/* New Profile Button (Always first) */}
+                        <div
+                            className="profile-card new-profile-card"
+                            onClick={handleNewClick}
+                            role="button"
+                            tabIndex={0}
+                        >
+                            <div className="new-icon">+</div>
+                            <h3>New Profile</h3>
+                        </div>
+
+                        {profiles.map((profile) => (
+                            <div
+                                key={profile.id}
+                                className="profile-card"
+                                onClick={() => handleProfileClick(profile)}
+                                onDoubleClick={() => onConnect(profile)}
+                                role="button"
+                                tabIndex={0}
+                            >
+                                <div className="card-header">
                                     <div className="profile-info">
                                         <h3>{profile.name}</h3>
                                         <p>
@@ -52,18 +83,37 @@ function ConnectScreen({
                                         ×
                                     </button>
                                 </div>
-                            ))
-                        )}
+                                <div className="card-actions">
+                                    <button
+                                        className="btn-glass small full-width"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onConnect(profile);
+                                        }}
+                                    >
+                                        Connect
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                </aside>
+                </div>
+            </div>
+        );
+    }
 
-                {/* Right Area: Form */}
-                <div className="config-area">
-                    <header className="config-header">
-                        <h1>SSH Video Viewer</h1>
-                        <p>Securely stream videos from your remote server.</p>
-                    </header>
+    // Form View Render
+    return (
+        <div className="screen-connect">
+            <div className="glass-panel form-mode">
+                <header className="config-header">
+                    <button className="btn-icon round back-btn" onClick={handleBack} title="Back to List">
+                        ←
+                    </button>
+                    <h1>{activeProfileId ? "Edit Profile" : "New Connection"}</h1>
+                </header>
 
+                <div className="config-scroll-area">
                     <div className="form-grid-v2">
                         <div className="input-group full-width">
                             <label>Connection Name</label>
@@ -73,6 +123,7 @@ function ConnectScreen({
                                     setConfig((prev) => ({ ...prev, name: e.target.value }))
                                 }
                                 placeholder="e.g. My Media Server"
+                                autoFocus
                             />
                         </div>
 
@@ -122,15 +173,46 @@ function ConnectScreen({
                         </div>
 
                         <div className="input-group full-width">
-                            <label>Private Key</label>
-                            <textarea
-                                rows={3}
-                                value={config.privateKey}
-                                onChange={(e) =>
-                                    setConfig((prev) => ({ ...prev, privateKey: e.target.value }))
-                                }
-                                placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"
-                            />
+                            <label>Private Key (File)</label>
+                            <div className="file-input-wrapper">
+                                <input
+                                    type="file"
+                                    id="private-key-file"
+                                    onChange={(e) => {
+                                        const file = e.target.files[0];
+                                        if (file) {
+                                            const reader = new FileReader();
+                                            reader.onload = (ev) => {
+                                                setConfig((prev) => ({ ...prev, privateKey: ev.target.result }));
+                                            };
+                                            reader.readAsText(file);
+                                        }
+                                    }}
+                                    style={{ display: "none" }}
+                                />
+                                <div className="file-input-display">
+                                    <span className={`status-badge ${config.privateKey ? "success" : "neutral"}`}>
+                                        {config.privateKey
+                                            ? "✓ Key Loaded"
+                                            : "No private key selected"}
+                                    </span>
+                                    <button
+                                        className="btn-glass small"
+                                        onClick={() => document.getElementById("private-key-file").click()}
+                                    >
+                                        Select File...
+                                    </button>
+                                    {config.privateKey && (
+                                        <button
+                                            className="btn-icon danger small"
+                                            onClick={() => setConfig((prev) => ({ ...prev, privateKey: "" }))}
+                                            title="Clear Key"
+                                        >
+                                            ×
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
                         <div className="input-group full-width">
@@ -146,10 +228,10 @@ function ConnectScreen({
                     </div>
 
                     <div className="actions-row">
-                        <button className="btn-glass" onClick={onSaveProfile} disabled={busy}>
-                            Save Profile
+                        <button className="btn-glass" onClick={handleSaveAndBack} disabled={busy}>
+                            Save & Close
                         </button>
-                        <button className="btn-primary" onClick={onConnect} disabled={busy}>
+                        <button className="btn-primary" onClick={() => onConnect()} disabled={busy}>
                             {busy ? "Connecting..." : "Connect Now"}
                         </button>
                     </div>

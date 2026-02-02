@@ -65,10 +65,9 @@ function Sidebar({
                     <span>Back to Connect</span>
                 </div>
                 <div className="connection-info">
-                    <p className="eyebrow" style={{ color: "var(--accent-color)" }}>
+                    <p className="eyebrow" style={{ color: "var(--accent-color)", fontSize: "1.2rem", fontWeight: "600", margin: 0 }}>
                         {configName || "Library"}
                     </p>
-                    <h2>Videos</h2>
                 </div>
             </div>
 
