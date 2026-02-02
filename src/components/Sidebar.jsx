@@ -65,7 +65,15 @@ function Sidebar({
                     <span>Back to Connect</span>
                 </div>
                 <div className="connection-info">
-                    <p className="eyebrow" style={{ color: "var(--accent-color)", fontSize: "1.2rem", fontWeight: "600", margin: 0 }}>
+                    <p className="eyebrow" style={{
+                        color: "var(--accent-color)",
+                        fontSize: "1.2rem",
+                        fontWeight: "600",
+                        margin: 0,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis"
+                    }}>
                         {configName || "Library"}
                     </p>
                 </div>
