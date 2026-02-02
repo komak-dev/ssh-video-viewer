@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
-function VideoPlayer({ src, onEnded }) {
+function VideoPlayer({ src, onEnded, onNext, onPrev }) {
     const videoRef = useRef(null);
     const containerRef = useRef(null);
     const controlTimeoutRef = useRef(null); // Ref for auto-hide timer
@@ -153,9 +153,68 @@ function VideoPlayer({ src, onEnded }) {
             // setIsFullscreen(isFull);
         };
 
-        document.addEventListener("fullscreenchange", handleFullscreenChange);
         return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
     }, []);
+
+    const [volume, setVolume] = useState(() => {
+        const saved = localStorage.getItem("ssh-video-volume");
+        return saved !== null ? parseFloat(saved) : 1.0;
+    });
+
+    // Handle Volume Changes
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.volume = volume;
+        }
+        localStorage.setItem("ssh-video-volume", volume);
+    }, [volume]);
+
+    // Keyboard Shortcuts (Play/Pause, Seek, Volume)
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (!videoRef.current) return;
+            handleInternalMouseMove();
+
+            switch (e.key) {
+                case "ArrowRight":
+                    e.preventDefault();
+                    videoRef.current.currentTime += 5;
+                    break;
+                case "ArrowLeft":
+                    e.preventDefault();
+                    videoRef.current.currentTime -= 5;
+                    break;
+                case " ":
+                    e.preventDefault();
+                    togglePlay();
+                    break;
+                case "f":
+                case "F":
+                    toggleFullscreen();
+                    break;
+                case "ArrowUp":
+                    e.preventDefault();
+                    setVolume((prev) => Math.min(1, prev + 0.1));
+                    break;
+                case "ArrowDown":
+                    e.preventDefault();
+                    setVolume((prev) => Math.max(0, prev - 0.1));
+                    break;
+                default:
+                    break;
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [togglePlay, toggleFullscreen]);
+
+    // Update volume when src changes
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.volume = volume;
+        }
+    }, [src, volume]);
 
     if (!src) {
         return (
@@ -220,6 +279,7 @@ function VideoPlayer({ src, onEnded }) {
                         />
                     </div>
 
+                    {/* Buttons Row */}
                     <div className="controls-row">
                         <div className="left-controls">
                             <button onClick={togglePlay} className="control-btn-icon" title={isPlaying ? "Pause" : "Play"}>
@@ -236,15 +296,42 @@ function VideoPlayer({ src, onEnded }) {
                         </div>
 
                         <div className="center-controls">
+                            <button onClick={onPrev} className="control-btn-icon" title="Previous Video">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+                            </button>
                             <button onClick={() => seek(-10)} className="control-btn-icon" title="-10s">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M9 13a4 4 0 0 1 7 0"></path><path d="M12 13v4"></path></svg>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 19 2 12 11 5 11 19"></polygon><polygon points="22 19 13 12 22 5 22 19"></polygon></svg>
                             </button>
                             <button onClick={() => seek(10)} className="control-btn-icon" title="+10s">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M15 13a4 4 0 0 0-7 0"></path><path d="M12 13v4"></path></svg>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
+                            </button>
+                            <button onClick={onNext} className="control-btn-icon" title="Next Video">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
                             </button>
                         </div>
 
                         <div className="right-controls">
+                            {/* Volume Control Moved Here */}
+                            <div className="volume-control-group">
+                                <button className="control-btn-icon volume-btn" title={`Volume: ${Math.round(volume * 100)}%`}>
+                                    {volume === 0 ? (
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                                    ) : (
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                                    )}
+                                </button>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="1"
+                                    step="0.05"
+                                    value={volume}
+                                    onChange={(e) => setVolume(parseFloat(e.target.value))}
+                                    className="volume-slider"
+                                    title={`Volume: ${Math.round(volume * 100)}%`}
+                                />
+                            </div>
+
                             <button
                                 onClick={toggleFullscreen}
                                 className="control-btn-icon"

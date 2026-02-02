@@ -77,7 +77,12 @@ function PlayerScreen({
                 )}
 
                 {/* Video Area */}
-                <VideoPlayer src={currentSrc} onEnded={onPlayNext} />
+                <VideoPlayer
+                    src={currentSrc}
+                    onEnded={onPlayNext}
+                    onNext={onPlayNext}
+                    onPrev={onPlayPrevious}
+                />
             </main>
         </div>
     );
