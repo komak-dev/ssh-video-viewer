@@ -333,6 +333,24 @@ function VideoPlayer({ src, onEnded, onNext, onPrev }) {
                             </div>
 
                             <button
+                                onClick={async () => {
+                                    try {
+                                        if (document.pictureInPictureElement) {
+                                            await document.exitPictureInPicture();
+                                        } else if (videoRef.current) {
+                                            await videoRef.current.requestPictureInPicture();
+                                        }
+                                    } catch (err) {
+                                        console.error("PiP toggling failed:", err);
+                                    }
+                                }}
+                                className="control-btn-icon"
+                                title="Picture in Picture"
+                            >
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2" transform="rotate(90 12 12)"></rect><rect x="14" y="14" width="7" height="5" rx="1" ry="1"></rect></svg>
+                            </button>
+
+                            <button
                                 onClick={toggleFullscreen}
                                 className="control-btn-icon"
                                 title={isFullscreen ? "Exit Fullscreen (F)" : "Enter Fullscreen (F)"}

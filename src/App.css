@@ -681,7 +681,8 @@ textarea {
 
   display: flex;
   position: relative;
-  box-shadow: 0 0 100px rgba(99, 102, 241, 0.1);
+  box-shadow: none;
+  /* Removed heavy shadow for performance */
   margin: auto;
   background: #000;
   /* Ensure black box even if video is loading */

@@ -116,7 +116,7 @@ fn parse_stream_path(uri: &str) -> Result<String, String> {
     String::from_utf8(decoded).map_err(|_| "Stream path is not valid UTF-8.".to_string())
 }
 
-const DEFAULT_CHUNK_SIZE: u64 = 2 * 1024 * 1024;
+const DEFAULT_CHUNK_SIZE: u64 = 4 * 1024 * 1024;
 
 fn parse_range_header(value: &str, total: u64) -> Option<(u64, u64)> {
     let value = value.trim();
